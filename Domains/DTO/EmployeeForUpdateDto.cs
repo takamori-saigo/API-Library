@@ -1,6 +1,8 @@
-﻿namespace Domains.DTO;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class EmployeeForUpdateDto
+namespace Domains.DTO;
+
+public class EmployeeForUpdateDto: EmployeeForManipulationDto
 {
     
 }

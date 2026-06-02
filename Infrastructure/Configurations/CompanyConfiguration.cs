@@ -8,6 +8,8 @@ public class CompanyConfiguration: IEntityTypeConfiguration<Company>
 {
     public void Configure(EntityTypeBuilder<Company> builder)
     {
+
+        
         var seed = new DateTime(2024,2,12);
         builder.HasData(
             new Company

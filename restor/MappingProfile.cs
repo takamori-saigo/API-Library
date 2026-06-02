@@ -1,6 +1,14 @@
-﻿namespace restor;
+﻿using AutoMapper;
+using Domains;
+using Domains.DTO;
 
-public class Mapper: 
+namespace restor;
+
+public class MappingProfile: Profile
 {
-    
+    public MappingProfile()
+    {
+        CreateMap<EmployeeForUpdateDto, Employee>().ReverseMap();
+        CreateMap<CompanyForUpdateDTO, Company>();
+    }
 }

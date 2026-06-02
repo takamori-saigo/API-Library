@@ -8,6 +8,12 @@ public class EmployeeConfiguration: IEntityTypeConfiguration<Employee>
 {
     public void Configure(EntityTypeBuilder<Employee> builder)
     {
+        builder.HasOne<Company>(x => x.Company)
+            .WithMany(c => c.Employees)
+            .HasForeignKey(x => x.CompanyId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired();
+        
         var seed = new DateTime(2024,10,12);
         var seedOfCompanies = new DateTime(2024,2,12);
         builder.HasData(

@@ -1,4 +1,5 @@
-﻿using Contracts;
+﻿using AutoMapper;
+using Contracts;
 using Domains;
 using Domains.DTO;
 using Infrastructure;
@@ -13,26 +14,27 @@ public class CompanyController: ControllerBase
 {
     private readonly IManagerRepository _repository;
     private readonly ILogger<CompanyController> _logger;
-    public CompanyController(IManagerRepository repository, ILogger<CompanyController> logger)
+    private readonly IMapper _mapper;
+    public CompanyController(IManagerRepository repository, IMapper mapper, ILogger<CompanyController> logger)
     {
         _repository = repository;
         _logger = logger;
-        _logger.LogInformation("Get in Controller");
+        _mapper = mapper;
     }
 
     [HttpGet]
-    public IActionResult GetCompanies()
+    public async  Task<IActionResult> GetCompanies()
     {
         _logger.LogInformation("Get Companies");
-        var companies = _repository.CompanyRepository.GetCompanies();
+        var companies = await _repository.CompanyRepository.GetCompaniesAsync(false);
         var dto = companies.Select(x => new CompanyDTO{Name = x.Name, Address = x.Address, Country = x.Country});
         return Ok(dto);
     }
 
     [HttpGet("{id}", Name = "CompanyById")]
-    public IActionResult GetCompany(Guid id)
+    public async Task<IActionResult> GetCompany(Guid id)
     {
-        var company = _repository.CompanyRepository.GetCompany(id, trackChanges: false);
+        var company = await _repository.CompanyRepository.GetCompanyAsync(id, trackChanges: false);
         if (company == null)
         {
             _logger.LogInformation("$Company {id} not found");
@@ -44,11 +46,11 @@ public class CompanyController: ControllerBase
     }
 
     [HttpGet("collection/({ids})", Name = "CollectionsByCompanyId")]
-    public IActionResult GetCompaniesByIds([ModelBinder(BinderType = typeof(ArrayModelBuilder))]IEnumerable<Guid> ids)
+    public async Task<IActionResult> GetCompaniesByIds([ModelBinder(BinderType = typeof(ArrayModelBuilder))]IEnumerable<Guid> ids)
     {
         if (ids == null) return BadRequest();
 
-        var companies = _repository.CompanyRepository.GetCompaniesByIdes(ids, trackChanges: false);
+        var companies = await _repository.CompanyRepository.GetCompaniesByIdesAsync(ids, trackChanges: false);
         
         if (companies.Count() != ids.Count()) return NotFound();
         
@@ -58,13 +60,18 @@ public class CompanyController: ControllerBase
     }
 
     [HttpPost("collection")]
-    public IActionResult CreateCollectionCompany([FromBody]IEnumerable<CompanyForCreationDto> dto)
+    public async Task<IActionResult> CreateCollectionCompany([FromBody]IEnumerable<CompanyForCreationDto> dto)
     {
         if (dto == null) return BadRequest();
         
         var comapnies = dto.Select(x =>
             new Company {Id = new Guid(), Name = x.Name, Address = x.Address, Country = x.Country});
-        
+
+        foreach (var c in comapnies)
+        {
+            _repository.CompanyRepository.CreateCompany(c);
+        }
+        await _repository.SaveAsync();
         if (comapnies.Count() == 0) return NotFound();
         
         var companyDto = comapnies.Select(x => new CompanyDTO { Name = x.Name, Address = x.Address, Country = x.Country });
@@ -72,13 +79,16 @@ public class CompanyController: ControllerBase
     }
     
     [HttpPost]
-    public IActionResult CreateCompany([FromBody] CompanyForCreationDto createCompanyDto)
+    public async Task<IActionResult> CreateCompany([FromBody] CompanyForCreationDto createCompanyDto)
     {
         if (createCompanyDto == null)
         {
             return BadRequest("CompanyDto is null");
         }
 
+        if (!ModelState.IsValid)
+            return UnprocessableEntity("Unable to add company");
+        
         var companyEntity = new Company()
         {
             Id = Guid.NewGuid(),
@@ -87,12 +97,33 @@ public class CompanyController: ControllerBase
             Country = createCompanyDto.Country,
         };
         _repository.CompanyRepository.CreateCompany(companyEntity);
-        _repository.Save();
+        await _repository.SaveAsync();
         var companyDto = new CompanyDTO
             {Name = companyEntity.Name,
                 Address = companyEntity.Address,
                 Country = companyEntity.Country
             };
         return CreatedAtRoute("CompanyById", new {id = companyEntity.Id}, companyDto);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCompany(Guid id)
+    {
+        var company  = await _repository.CompanyRepository.GetCompanyAsync(id, trackChanges: false);
+        if (company == null) return NotFound();
+        _repository.CompanyRepository.DeleteCompany(company);
+        await _repository.SaveAsync();
+        return NoContent();
+    }
+    
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateCompany(Guid id, [FromBody] CompanyForUpdateDTO company)
+    {
+        if (company == null) return BadRequest();
+        var companyEntity = await _repository.CompanyRepository.GetCompanyAsync(id, trackChanges: false);
+        if (companyEntity == null) return NotFound();
+        _mapper.Map(company, companyEntity);
+        await _repository.SaveAsync();
+        return NoContent();
     }
 }
