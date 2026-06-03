@@ -32,7 +32,7 @@ public class EmployeeController: ControllerBase
             return NotFound();
         }
 
-        var employeesFromDb = _repository.EmployeeRepository.GetEmployees(company.Id, false);
+        var employeesFromDb = await _repository.EmployeeRepository.GetEmployeesAsync(company.Id, false);
 
         if (employeesFromDb == null)
         {
@@ -51,7 +51,7 @@ public class EmployeeController: ControllerBase
         {
             return NotFound();
         }
-        var employee = _repository.EmployeeRepository.GetEmployee(company.Id, id,  false);
+        var employee = await _repository.EmployeeRepository.GetEmployeeAsync(company.Id, id,  false);
         if (employee == null)
         {
             return NotFound();
@@ -90,7 +90,7 @@ public class EmployeeController: ControllerBase
     {
         var company = await _repository.CompanyRepository.GetCompanyAsync(companyID, false);
         if (company == null) return NotFound();
-        var employee = _repository.EmployeeRepository.GetEmployee(company.Id, id, false);
+        var employee = await _repository.EmployeeRepository.GetEmployeeAsync(company.Id, id, false);
         if (employee == null) return NotFound();
         _repository.EmployeeRepository.DeleteEmployee(employee);
         await _repository.SaveAsync();
@@ -104,7 +104,7 @@ public class EmployeeController: ControllerBase
 
         var company = await _repository.CompanyRepository.GetCompanyAsync(companyID, false);
         if (company == null) return NotFound();
-        var employeeEntity = _repository.EmployeeRepository.GetEmployee(company.Id, id, true);
+        var employeeEntity = _repository.EmployeeRepository.GetEmployeeAsync(company.Id, id, true);
         if (employeeEntity == null) return NotFound();
         _mapper.Map(employee, employeeEntity);
         await _repository.SaveAsync();
@@ -118,7 +118,7 @@ public class EmployeeController: ControllerBase
         if (patchDoc == null) return BadRequest();
         var company = await _repository.CompanyRepository.GetCompanyAsync(companyId, false);
         if (company == null) return NotFound();
-        var employeeEntity = _repository.EmployeeRepository.GetEmployee(company.Id, id, true);
+        var employeeEntity = _repository.EmployeeRepository.GetEmployeeAsync(company.Id, id, true);
         var patchEntity = _mapper.Map<EmployeeForUpdateDto>(employeeEntity);
         patchDoc.ApplyTo(patchEntity, ModelState);
         TryValidateModel(patchEntity);

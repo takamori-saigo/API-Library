@@ -4,6 +4,7 @@ using Domains;
 using Domains.DTO;
 using Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using restor.ActionFilters;
 using restor.ModelBinders;
 
 namespace restor.Controllers;
@@ -79,15 +80,13 @@ public class CompanyController: ControllerBase
     }
     
     [HttpPost]
+    [ServiceFilter(typeof(ValidationFilterAttribute))]
     public async Task<IActionResult> CreateCompany([FromBody] CompanyForCreationDto createCompanyDto)
     {
         if (createCompanyDto == null)
         {
             return BadRequest("CompanyDto is null");
         }
-
-        if (!ModelState.IsValid)
-            return UnprocessableEntity("Unable to add company");
         
         var companyEntity = new Company()
         {
@@ -117,6 +116,7 @@ public class CompanyController: ControllerBase
     }
     
     [HttpPut("{id}")]
+    [ServiceFilter(typeof(ValidationFilterAttribute))]
     public async Task<IActionResult> UpdateCompany(Guid id, [FromBody] CompanyForUpdateDTO company)
     {
         if (company == null) return BadRequest();
