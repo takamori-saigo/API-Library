@@ -16,6 +16,7 @@ builder.Services.AddControllers(x => { x.RespectBrowserAcceptHeader = true;
     .AddXmlSerializerFormatters();
 builder.Services.AddScoped<IManagerRepository, ManagerRepository>();
 builder.Services.AddScoped<ValidationFilterAttribute>();
+builder.Services.AddScoped<ValidateCompanyExistsAttribute>();
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfile>();
@@ -26,7 +27,6 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
 });
-
 logger.Info("start aplication");
 var app = builder.Build();
 app.UseHttpsRedirection();

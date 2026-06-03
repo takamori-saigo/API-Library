@@ -28,7 +28,7 @@ public class ValidationFilterAttribute: IActionFilter
         {
             context.Result = new BadRequestObjectResult(context.ModelState);
         }
-    }
+    } 
 
     public void OnActionExecuted(ActionExecutedContext context)
     {

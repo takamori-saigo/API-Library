@@ -106,10 +106,11 @@ public class CompanyController: ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [ServiceFilter(typeof(ValidateCompanyExistsAttribute))]
+    [ServiceFilter(typeof(ValidateCompanyExistsAttribute))]
     public async Task<IActionResult> DeleteCompany(Guid id)
     {
-        var company  = await _repository.CompanyRepository.GetCompanyAsync(id, trackChanges: false);
-        if (company == null) return NotFound();
+        var company = HttpContext.Items["Company"] as Company;
         _repository.CompanyRepository.DeleteCompany(company);
         await _repository.SaveAsync();
         return NoContent();
@@ -119,9 +120,7 @@ public class CompanyController: ControllerBase
     [ServiceFilter(typeof(ValidationFilterAttribute))]
     public async Task<IActionResult> UpdateCompany(Guid id, [FromBody] CompanyForUpdateDTO company)
     {
-        if (company == null) return BadRequest();
-        var companyEntity = await _repository.CompanyRepository.GetCompanyAsync(id, trackChanges: false);
-        if (companyEntity == null) return NotFound();
+        var companyEntity = HttpContext.Items["Company"] as Company;
         _mapper.Map(company, companyEntity);
         await _repository.SaveAsync();
         return NoContent();
