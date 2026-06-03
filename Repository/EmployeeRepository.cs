@@ -11,8 +11,9 @@ public class EmployeeRepository: RepositoryBase<Employee> , IEmployeeRepository
     public EmployeeRepository(RestorDbContext restorDbContext) : base(restorDbContext) { }
     public async Task<PagedList<Employee>> GetEmployeesAsync(Guid companyId, EmployeeParameters employeeParameter, bool trackChanges)
     {
-        var employee = await GetByCondition(e => e.CompanyId.Equals(companyId) && 
-                (e.Age >= employeeParameter.MinAge && e.Age <= employeeParameter.MaxAge), trackChanges) 
+        var employee = await GetByCondition(e => e.CompanyId.Equals(companyId), trackChanges)
+            .FilterEmployees(employeeParameter.MinAge, employeeParameter.MaxAge)
+            .Sarch(employeeParameter.SearchTerm)
             .OrderBy(x => x.Name).ToListAsync();
         return PagedList<Employee>.ToPagedList(employee, employeeParameter.PageNumber, employeeParameter.PageSize);
     } 
