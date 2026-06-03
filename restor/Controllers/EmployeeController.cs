@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Text.Json;
+using AutoMapper;
 using Contracts;
 using Domains;
 using Domains.DTO;
@@ -23,7 +24,7 @@ public class EmployeeController: ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetEmployees(Guid companyID)
+    public async Task<IActionResult> GetEmployees(Guid companyID, [FromQuery] EmployeeParameters parameters)
     {
         var company = await _repository.CompanyRepository.GetCompanyAsync(companyID, false);
         if (company == null)
@@ -32,8 +33,14 @@ public class EmployeeController: ControllerBase
             return NotFound();
         }
 
-        var employeesFromDb = await _repository.EmployeeRepository.GetEmployeesAsync(company.Id, false);
-
+        if (!parameters.ValidAgeRange)
+        {
+            return BadRequest("Max age can't be less than min age");
+        }
+        var employeesFromDb = await _repository.EmployeeRepository.GetEmployeesAsync(company.Id, parameters, false);
+        
+        Response.Headers.Add("MetaDates", JsonSerializer.Serialize(employeesFromDb.MetaData));
+        
         if (employeesFromDb == null)
         {
             return NotFound();
