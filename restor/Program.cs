@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using NLog;
 using Repository;
 using restor;
+using restor.ActionFilters;
 
 var builder = WebApplication.CreateBuilder(args);
 var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
@@ -14,6 +15,7 @@ builder.Services.AddControllers(x => { x.RespectBrowserAcceptHeader = true;
 }).AddNewtonsoftJson()
     .AddXmlSerializerFormatters();
 builder.Services.AddScoped<IManagerRepository, ManagerRepository>();
+builder.Services.AddScoped<ValidationFilterAttribute>();
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfile>();
